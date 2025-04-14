@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.Toolbars;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 namespace DualGrid
 {
     [ExecuteAlways]
-    public class DualGridTilemap : MonoBehaviour {
+    public class DualGridTilemap : MonoBehaviour
+    {
+        public static Action<Vector3Int> OnTileChanged;
         protected static readonly Vector3Int[] Neighbours = {
             new(0, 0, 0),
             new(1, 0, 0),
@@ -27,7 +29,8 @@ namespace DualGrid
         // Provide the 16 tiles in the inspector
         public Tile[] tiles;
 
-        private void Start() {
+        private void Awake()
+        {
             // This dictionary stores the "rules", each 4-neighbour configuration corresponds to a tile
             // |_1_|_2_|
             // |_3_|_4_|
@@ -49,7 +52,12 @@ namespace DualGrid
                 {new (TileType.Tile, TileType.None, TileType.None, TileType.Tile), tiles[4]}, // DUAL_DOWN_RIGHT
                 {new (TileType.None, TileType.None, TileType.None, TileType.None), tiles[12]},
             };
-            RefreshDisplayTilemap();
+            OnTileChanged = SetDisplayTile;
+            Tilemap.tilemapTileChanged += (tilemap, syncTiles) =>
+            {
+                if (tilemap != placeholderTilemap) return;
+                foreach (var syncTile in syncTiles) SetDisplayTile(syncTile.position);
+            };
         }
 
         public void SetCell(Vector3Int coords, Tile tile) {
@@ -80,15 +88,6 @@ namespace DualGrid
             {
                 var newPos = pos + n;
                 displayTilemap.SetTile(newPos, CalculateDisplayTile(newPos));
-            }
-        }
-
-        // The tiles on the display tilemap will recalculate themselves based on the placeholder tilemap
-        public void RefreshDisplayTilemap() {
-            for (var i = -100; i < 100; i++) {
-                for (var j = -100; j < 100; j++) {
-                    SetDisplayTile(new Vector3Int(i, j, 0));
-                }
             }
         }
     }

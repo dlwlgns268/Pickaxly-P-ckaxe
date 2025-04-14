@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: 9bf966a3e36931f4d8d39f38f2e73a7f
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - tileToPaint: {fileID: 11400000, guid: 92dee0dba81b7be4c945d7feaadd083e, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
