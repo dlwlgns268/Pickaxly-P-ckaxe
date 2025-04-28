@@ -1,54 +1,55 @@
 using System;
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine.Tilemaps;
 
 public class PlayerManager : MonoBehaviour
 {
-    [SerializeField]private bool _isMoving;
-    private Vector3 _origPos, _targetPos;
-    private float _timeToMove = 0.2f;
+    public bool IsMoving { get; private set; }
+    [SerializeField] private float timeToMove = 0.2f;
     public Tilemap grid;
     public RuleTile ruleTile;
-    void Update()
+
+    private void Start()
     {
-        if (Input.GetKey(KeyCode.W) && !_isMoving) StartCoroutine(MovePlayer(Vector3.up));
-        if (Input.GetKey(KeyCode.S) && !_isMoving) StartCoroutine(MovePlayer(Vector3.down));
-        if (Input.GetKey(KeyCode.A) && !_isMoving) StartCoroutine(MovePlayer(Vector3.left));
-        if (Input.GetKey(KeyCode.D) && !_isMoving) StartCoroutine(MovePlayer(Vector3.right));
+        StartCoroutine(MovePlayerRoutine());
     }
 
-    private IEnumerator MovePlayer(Vector3 direction)
+    // ReSharper disable once IteratorNeverReturns
+    private IEnumerator MovePlayerRoutine()
     {
-        _isMoving = true;
-        
-        float elapsedTime = 0;
-        
-        _origPos = transform.position;
-        _targetPos = _origPos + direction;
-        
-        Vector3Int targetCell = grid.WorldToCell(_targetPos);
-        
-        // Check if target cell matches rule tile
-        if (grid.GetTile(targetCell) == ruleTile)
+        while (true)
         {
-            _isMoving = false;
-            yield break;
-        }
+            var direction = GetDirection();
+            var targetPos = transform.position;
+            while (direction == GetDirection() && direction != Vector3.zero)
+            {
+                // Check if target cell matches rule tile
+                if (grid.GetTile(grid.WorldToCell(targetPos + direction)) == ruleTile) break;
+            
+                targetPos += direction;
+                IsMoving = true;
+                var elapsedTime = 0f;
+                while (elapsedTime < timeToMove)
+                {
+                    transform.position += direction * Time.deltaTime / timeToMove;
+                    elapsedTime += Time.deltaTime;
+                    yield return null;
+                }
+            }
 
-        
-        while (elapsedTime < _timeToMove)
-        {
-            transform.position = Vector3.Lerp(transform.position, _targetPos, elapsedTime / _timeToMove);
-            elapsedTime += Time.deltaTime;
+            transform.position = targetPos;
+            IsMoving = false;
+
             yield return null;
         }
-        
-        transform.position = _targetPos;
-
-        _isMoving = false;
     }
 
-    
+    private Vector3 GetDirection()
+    {
+        var direction = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        _ = Mathf.Abs(direction.x) < Mathf.Abs(direction.y) ? direction.x = 0 : direction.y = 0;
+        direction.Normalize();
+        return direction;
+    }
 }
