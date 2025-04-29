@@ -28,11 +28,9 @@ public class PlayerManager : MonoBehaviour
             
                 targetPos += direction;
                 IsMoving = true;
-                var elapsedTime = 0f;
-                while (elapsedTime < timeToMove)
+                while (IsUnderPosition(direction, transform.position, targetPos))
                 {
                     transform.position += direction * Time.deltaTime / timeToMove;
-                    elapsedTime += Time.deltaTime;
                     yield return null;
                 }
             }
@@ -44,6 +42,17 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
+    private static bool IsUnderPosition(Vector3 direction, Vector3 a, Vector3 b)
+    {
+        return direction switch
+        {
+            { x: >= 0, y: >= 0 } => a.x <= b.x && a.y <= b.y,
+            { x: < 0, y: >= 0 } => a.x >= b.x && a.y <= b.y,
+            { x: >= 0, y: < 0 } => a.x <= b.x && a.y >= b.y,
+            { x: < 0, y: < 0 } => a.x >= b.x && a.y >= b.y,
+            _ => false
+        };
+    }
     private Vector3 GetDirection()
     {
         var direction = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
